@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jason Schmitt Assignment 4</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container-fluid">
+    <h1 class="row">Login</h1>
+    <main>
+      <div class="row">
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username">
+      </div>
+      <div class="row">
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password">
+      </div>
+      <div>
+        <button onclick="login()">Login</button>
+        <button onclick="getDashboard()">Get dashboard</button>
+        <button onclick="getSettings()">Settings</button>
+      </div>
+    </main>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.20.0/axios.min.js"></script>
+  <script>
+
+    function login() {
+      const data = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      }
+      console.log(data);
+      axios.post('/api/login', data)
+        .then(res => {
+          console.log(res);
+          document.getElementById('username').value = '';
+          document.getElementById('password').value = '';
+          if(res && res.data && res.data.success) {
+            const token = res.data.token;
+            localStorage.setItem('jwt', token);
+            setExpirationInLocalStorage();
+            getDashboard();
+          }
+        });
+    }
+
+    function getDashboard() {
+      console.log('get dashboard');
+      watchExpirationInLocalStorage();
+      const token = localStorage.getItem('jwt');
+      axios.get('/api/dashboard', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(res => {
+        if(res && res.data && res.data.success) {
+          console.log(res);
+          document.querySelector('h1.row').innerHTML = 'Dashboard';
+          document.querySelector('main').innerHTML = res.data.myContent;
+          history.pushState(null, "Dashboard", "/dashboard");
+        }
+      });
+    }
+
+    function getSettings() {
+      console.log('get settings');
+      watchExpirationInLocalStorage();
+      const token = localStorage.getItem('jwt');
+      axios.get('/api/settings', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }).then(res => {
+        if(res && res.data && res.data.success) {
+          console.log(res);
+          document.querySelector('h1.row').innerHTML = 'Settings';
+          document.querySelector('main').innerHTML = res.data.myContent;
+          history.pushState(null, "Settings", "/settings");
+        }
+      });
+    }
+
+    function setExpirationInLocalStorage() {
+      console.log('setExpirationInLocalStorage');
+      var expiration = Date.now();
+      var threeMinutesInMilliseconds = 180000;
+      // console.log(expiration + threeMinutesInMilliseconds);
+      // console.log(expiration);
+      expiration = expiration + threeMinutesInMilliseconds;
+      localStorage.setItem('expire', expiration);
+    }
+
+    function watchExpirationInLocalStorage() {
+      const expirationCheckInterval = setInterval(
+        function () {
+          checkExpirationInLocalStorage();
+        }
+        , 180000);
+    }
+
+    function checkExpirationInLocalStorage() {
+      // console.log('checkExpirationInLocalStorage');
+      const expired = localStorage.getItem('expire');
+      const isExpired = Date.now();
+
+      if(isExpired > expired) {
+        console.log('this token is expired');
+        logout();
+      } else {
+        console.log('this token is NOT expired');
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      history.replaceState(null, 'Login', '/')
+      window.location.reload();
+    }
+
+    function onLoad() {
+      const token = localStorage.getItem('jwt');
+
+      if(token) {
+        getDashboard();
+      }
+    }
+    onLoad();
+  </script>
+</body>
+</html>
