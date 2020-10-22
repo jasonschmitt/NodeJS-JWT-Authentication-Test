@@ -19,7 +19,8 @@ const PORT = 3000;
 const secretKey = 'super secret';
 const jwtMW = exjwt({
   secret: secretKey,
-  algorithms: ['HS256']
+  algorithms: ['HS256'],
+  maxAge: 180000
 })
 
 const users = [{
