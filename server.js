@@ -55,7 +55,6 @@ app.post('/api/login', (req, res) => {
       });
     }
   }
-  res.send('response');
 });
 
 app.get('/api/dashboard', jwtMW, (req, res) => {

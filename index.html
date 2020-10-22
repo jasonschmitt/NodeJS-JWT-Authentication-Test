@@ -9,6 +9,9 @@
 <body>
   <div class="container-fluid">
     <h1 class="row">Login</h1>
+    <div id="alert" style="display:none;">
+      <div id="alert-text" class="alert alert-warning" role="alert">You're about to be logged out in 60 seconds!</div>
+    </div>
     <main>
       <div class="row">
         <label for="username">Username</label>
@@ -45,11 +48,25 @@
             setExpirationInLocalStorage();
             getDashboard();
           }
+        }).catch(err => {
+          // console.log(err.response.data.err);
+          throwError(err.response.data.err);
         });
+    }
+
+    function throwError(err) {
+      const errorMessage = document.getElementById("alert");
+      const alertText = document.getElementById("alert-text");
+
+      alertText.classList.add("alert-danger");
+      alertText.innerHTML = err;
+      errorMessage.style.display = "block";
     }
 
     function getDashboard() {
       console.log('get dashboard');
+      const errorMessage = document.getElementById("alert");
+      errorMessage.style.display = "none";
       watchExpirationInLocalStorage();
       const token = localStorage.getItem('jwt');
       axios.get('/api/dashboard', {
